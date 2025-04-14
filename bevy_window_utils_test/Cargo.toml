@@ -1,0 +1,10 @@
+[package]
+name = "bevy_window_utils_tester"
+version = "0.15.3"
+edition = "2021"
+publish = false
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.15.3"
+bevy_window_utils = { path = "../bevy_window_utils" }

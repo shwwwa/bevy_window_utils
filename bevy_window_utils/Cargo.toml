@@ -1,0 +1,23 @@
+[package]
+name = "bevy_window_utils"
+version = "0.15.3"
+edition = "2021"
+authors = ["shwwwa", "Adam Grabski"]
+description = "A library for window utils such as managing window icon and taskbar progress indicator in Bevy."
+license = "MIT"
+readme = "../Readme.md"
+repository = "https://github.com/shwwwa/bevy_window_utils"
+[lib]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+taskbar = ["dep:winsafe"]
+default = ["taskbar"]
+
+[dependencies]
+bevy = "0.15.3"
+winit = "0.30"
+
+[target.'cfg(windows)'.dependencies]
+winsafe = { version = "0.0.19", optional = true, features = ["shell"] }
