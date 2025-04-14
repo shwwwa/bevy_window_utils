@@ -16,7 +16,7 @@ taskbar = ["dep:winsafe"]
 default = ["taskbar"]
 
 [dependencies]
-bevy = "0.15.3"
+bevy = { version = "0.15.3", default-features = false, features = ["bevy_asset", "bevy_sprite", "bevy_window", "bevy_winit", "png"] } 
 winit = "0.30"
 
 [target.'cfg(windows)'.dependencies]
