@@ -4,7 +4,7 @@ use std::os::raw::c_void;
 #[cfg(target_os = "windows")]
 use winit::raw_window_handle;
 #[cfg(target_os = "windows")]
-use ::winit::raw_window_handle::HasWindowHandle;
+use winit::raw_window_handle::HasWindowHandle;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
 use bevy::{app::Plugin, ecs::system::Resource};

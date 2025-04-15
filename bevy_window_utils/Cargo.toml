@@ -1,6 +1,6 @@
 [package]
 name = "bevy_window_utils"
-version = "0.15.4"
+version = "0.15.5"
 edition = "2021"
 authors = ["shwwwa", "Adam Grabski"]
 description = "A library for window utils such as managing window icon and taskbar progress indicator in Bevy."
@@ -19,5 +19,5 @@ default = ["taskbar"]
 bevy = { version = "0.15.3", default-features = false, features = ["bevy_asset", "bevy_sprite", "bevy_window", "bevy_winit", "png"] } 
 winit = "0.30"
 
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 winsafe = { version = "0.0.23", optional = true, features = ["shell"] }
