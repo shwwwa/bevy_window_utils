@@ -2,10 +2,13 @@
 use std::os::raw::c_void;
 
 #[cfg(target_os = "windows")]
-use ::winit::platform::windows::WindowExtWindows;
+use winit::raw_window_handle;
+#[cfg(target_os = "windows")]
+use ::winit::raw_window_handle::HasWindowHandle;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
 use bevy::{app::Plugin, ecs::system::Resource};
+
 #[cfg(target_os = "windows")]
 use w::prelude::{shell_ITaskbarList3, Handle};
 #[cfg(target_os = "windows")]
@@ -56,7 +59,8 @@ fn window_utils_resource_updated(
         for window in windows.windows.iter() {
             window.1.set_window_icon(icon.clone())
         }
-        // currently only windows is supported
+	
+        // taskbar currently only supports windows
         #[cfg(all(feature = "taskbar", target_os = "windows"))]
         if window_utils.is_changed() {
             {
@@ -68,12 +72,22 @@ fn window_utils_resource_updated(
                             co::CLSCTX::INPROC_SERVER,
                         )
                         .unwrap();
-                        // i really hate this. winnit hods HWND as an integer while winsafe uses a pointer
-                        unsafe {
-                            let hwnd = HWND::from_ptr(window.1.hwnd() as *mut c_void);
-                            itbl.SetProgressValue(&hwnd, progress.progress, progress.max)
-                                .unwrap();
-                            itbl.SetProgressState(&hwnd, co::TBPF::NORMAL).unwrap();
+                        // unsafe: winit holds HWND as an NonZeroIsize while winsafe uses a pointer
+                        // requires rwh_06 feature (gets raw_window_handle v0.6.2) from winit that provided by default
+			unsafe {
+			    match window.1.window_handle() {
+				Ok(handle) => {
+				    // We know for sure that enum is Win32, so access hwnd directly
+				    if let raw_window_handle::RawWindowHandle::Win32(win_handle) = handle.as_raw() {
+					let hwnd = HWND::from_ptr(isize::from(win_handle.hwnd) as *mut c_void);
+					itbl.SetProgressValue(&hwnd, progress.progress, progress.max).unwrap();
+					itbl.SetProgressState(&hwnd, co::TBPF::NORMAL).unwrap();
+				    }
+				},
+				Err(e) => {
+				    warn!("Couldn't set taskbar progress: {}", e);
+				}
+			    }
                         }
                     }
                 }
