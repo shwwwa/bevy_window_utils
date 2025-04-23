@@ -1,9 +1,4 @@
-use bevy::{
-    app::{App, Startup, Update},
-    asset::AssetServer,
-    ecs::system::{Res, ResMut},
-    DefaultPlugins,
-};
+use bevy::prelude::*;
 use bevy_window_utils::{WindowUtils, WindowUtilsPlugin};
 
 fn main() {
@@ -15,8 +10,7 @@ fn main() {
                 window.window_icon = Some(assets.load("icon.png"));
                 window.taskbar_progress = Some(bevy_window_utils::TaskbarProgress {
                     progress: 30,
-                    max: 100,
-		    state: bevy_window_utils::TaskbarState::Normal
+		    ..Default::default()
                 });
             },
         )
@@ -27,8 +21,7 @@ fn main() {
                     .as_ref()
                     .map(|p| bevy_window_utils::TaskbarProgress {
                         progress: p.progress + 1,
-                        max: 100,
-			state: bevy_window_utils::TaskbarState::Normal
+			..Default::default()
                     });
         });
     app.run();

@@ -20,26 +20,33 @@ use w::{HWND, ITaskbarList4};
 use winsafe::{self as w, co};
 
 /** A [`Plugin`] that defines an interface for extended windowing support in Bevy.
-
+You can initialize window icon here.
 Adds barely exposed things to bevy like setting window icons, taskbar progress, or other winit/winsafe options. */
-pub struct WindowUtilsPlugin;
+#[derive(Default)]
+pub struct WindowUtilsPlugin {
+    /** What window icon to set on initialization. */
+    pub icon: Option<bevy::asset::Handle<Image>>,
+}
 
 impl Plugin for WindowUtilsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<WindowUtils>()
-            .add_systems(Update, window_utils_resource_updated)
-            .add_systems(Update, update_is_maximized);
+        app.insert_resource(WindowUtils {
+            window_icon: self.icon.clone(),
+            ..Default::default()
+        })
+        .add_systems(Update, window_utils_resource_updated)
+        .add_systems(Update, update_is_maximized);
     }
 }
 
-#[cfg(feature = "taskbar")]
 /** Struct for taskbar progress. Requires `taskbar` feature.
-   Provides useful interface from COM:
-   https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
+  Provides useful interface from COM:
+  https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
 
-   Supports:
-   - Windows (7+)
+  Supports:
+  - Windows (7+)
 */
+#[cfg(feature = "taskbar")]
 pub struct TaskbarProgress {
     /** Indicates the proportion of the operation that has been completed. */
     pub progress: u64,
@@ -52,6 +59,17 @@ pub struct TaskbarProgress {
     pub state: TaskbarState,
     /// Automatically stops the progress when [`TaskbarProgress::progress`] exceeds [`TaskbarProgress::max`].
     pub auto_no_progress: bool,
+}
+
+impl Default for TaskbarProgress {
+    fn default() -> Self {
+        TaskbarProgress {
+            progress: 0,
+            max: 100,
+            state: TaskbarState::Normal,
+            auto_no_progress: true,
+        }
+    }
 }
 
 /// Sets the type and state of the progress indicator displayed on a taskbar button.
