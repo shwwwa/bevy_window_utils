@@ -16,6 +16,7 @@ fn main() {
                 window.taskbar_progress = Some(bevy_window_utils::TaskbarProgress {
                     progress: 30,
                     max: 100,
+		    state: bevy_window_utils::TaskbarState::Normal
                 });
             },
         )
@@ -27,6 +28,7 @@ fn main() {
                     .map(|p| bevy_window_utils::TaskbarProgress {
                         progress: p.progress + 1,
                         max: 100,
+			state: bevy_window_utils::TaskbarState::Normal
                     });
         });
     app.run();

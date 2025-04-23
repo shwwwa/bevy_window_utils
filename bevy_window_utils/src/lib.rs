@@ -7,7 +7,7 @@ use winit::raw_window_handle;
 use winit::raw_window_handle::HasWindowHandle;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
-use bevy::{app::Plugin, ecs::system::Resource};
+use bevy::{app::Plugin, prelude::Resource};
 
 #[cfg(target_os = "windows")]
 use w::prelude::{shell_ITaskbarList3, Handle};
@@ -16,6 +16,9 @@ use w::{ITaskbarList4, HWND};
 #[cfg(target_os = "windows")]
 use winsafe::{self as w, co};
 
+/** A [`Plugin`] that defines an interface for extended windowing support in Bevy.
+
+    Adds barely exposed things to bevy like setting window icons, taskbar progress, or other winit/winsafe options. */
 pub struct WindowUtilsPlugin;
 
 impl Plugin for WindowUtilsPlugin {
@@ -26,15 +29,74 @@ impl Plugin for WindowUtilsPlugin {
 }
 
 #[cfg(feature = "taskbar")]
+/** Struct for taskbar progress. Supports only windows 7+. Requires `taskbar` feature.
+    Provides useful interface from COM:
+    https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
+ */
 pub struct TaskbarProgress {
+    /** Indicates the proportion of the operation that has been completed. */
     pub progress: u64,
+    /** Indicates the value progress will have when the operation is complete. */
     pub max: u64,
+    /// Indicates the type and state of the progress indicator displayed on a taskbar button.
+    /// Note that a call to SetProgressValue will switch a progress indicator
+    /// currently in an indeterminate mode (TBPF_INDETERMINATE) to a normal (determinate) display
+    /// and clear the TBPF_INDETERMINATE flag.
+    pub state: TaskbarState,
 }
 
+/// Sets the type and state of the progress indicator displayed on a taskbar button.
+/// Note that a call to SetProgressValue should switch a progress indicator
+/// currently in an indeterminate mode (TBPF_INDETERMINATE) to a normal (determinate) display
+/// and clear the TBPF_INDETERMINATE flag, but is overwritten with state change, so change it manually.
+#[derive(Copy, Clone)]
+pub enum TaskbarState {
+    /// Stops displaying progress and returns the button to its normal state.
+    /// Call this method with this flag to dismiss the progress bar when the
+    /// operation is complete or cancelled.
+    NoProgress = 0x0,
+    /// The progress indicator does not grow in size but cycles repeatedly
+    /// along the length of the taskbar button. This indicates activity without
+    /// specifying what proportion of the progress is complete. Progress is
+    /// taking place but there is no prediction as to how long the operation
+    /// will take.
+    Indeterminate = 0x1,
+    /// The progress indicator grows in size from left to right in proportion to
+    /// the estimated amount of the operation completed. This is a determinate
+    /// progress indicator; a prediction is being made as to the duration of the
+    /// operation.
+    Normal = 0x2,
+    /// The progress indicator turns red to show that an error has occurred in
+    /// one of the windows that is broadcasting progress. This is a determinate
+    /// state. If the progress indicator is in the indeterminate state it
+    /// switches to a red determinate display of a generic percentage not
+    /// indicative of actual progress.
+    Error = 0x4,
+    /// The progress indicator turns yellow to show that progress is currently
+    /// stopped in one of the windows but can be resumed by the user. No error
+    /// condition exists and nothing is preventing the progress from continuing.
+    /// This is a determinate state. If the progress indicator is in the
+    /// indeterminate state it switches to a yellow determinate display of a
+    /// generic percentage not indicative of actual progress.
+    Paused = 0x8,
+}
+
+impl From<isize> for TaskbarState {
+    fn from(value: isize) -> Self {
+	value.into()
+    }
+}
+
+/** Main resource with access to additional exposed things from winit. */
 #[derive(Resource, Default)]
 pub struct WindowUtils {
     #[cfg(feature = "taskbar")]
+    /** Current taskbar progress. Supports only windows 7+. Requires `taskbar` feature.
+    Provides useful interface from COM:
+    https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
+    */
     pub taskbar_progress: Option<TaskbarProgress>,
+    /** Contains handle to window's icon. If resource is invalid throws [`bevy_asset::server`] error to console. */
     pub window_icon: Option<bevy::asset::Handle<Image>>,
 }
 
@@ -43,6 +105,7 @@ fn window_utils_resource_updated(
     windows: NonSend<WinitWindows>,
     assets: Res<Assets<Image>>,
 ) {
+    // If something from this crate was changed.
     if assets.is_changed() || window_utils.is_changed() {
         let icon = window_utils
             .window_icon
@@ -50,17 +113,19 @@ fn window_utils_resource_updated(
             .and_then(|i| assets.get(i))
             .and_then(|i| {
                 ::winit::window::Icon::from_rgba(
-                    i.data.clone(),
+		    // safe unwrap because it is not being used as a storage texture.
+                    i.data.clone().unwrap(),
                     i.texture_descriptor.size.width,
                     i.texture_descriptor.size.height,
                 )
                 .ok()
             });
+	
         for window in windows.windows.iter() {
             window.1.set_window_icon(icon.clone())
         }
 	
-        // taskbar currently only supports windows
+        // Taskbar currently only supports windows.
         #[cfg(all(feature = "taskbar", target_os = "windows"))]
         if window_utils.is_changed() {
             {
@@ -72,8 +137,8 @@ fn window_utils_resource_updated(
                             co::CLSCTX::INPROC_SERVER,
                         )
                         .unwrap();
-                        // unsafe: winit holds HWND as an NonZeroIsize while winsafe uses a pointer
-                        // requires rwh_06 feature (gets raw_window_handle v0.6.2) from winit that provided by default
+                        // unsafe: winit holds HWND as an NonZeroIsize while winsafe uses a pointer.
+                        // requires rwh_06 feature (gets raw_window_handle v0.6) from winit that is provided by default.
 			unsafe {
 			    match window.1.window_handle() {
 				Ok(handle) => {
@@ -81,7 +146,7 @@ fn window_utils_resource_updated(
 				    if let raw_window_handle::RawWindowHandle::Win32(win_handle) = handle.as_raw() {
 					let hwnd = HWND::from_ptr(isize::from(win_handle.hwnd) as *mut c_void);
 					itbl.SetProgressValue(&hwnd, progress.progress, progress.max).unwrap();
-					itbl.SetProgressState(&hwnd, co::TBPF::NORMAL).unwrap();
+					itbl.SetProgressState(&hwnd, co::TBPF::from_raw(progress.state as u32)).unwrap();
 				    }
 				},
 				Err(e) => {

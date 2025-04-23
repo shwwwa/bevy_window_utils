@@ -2,11 +2,12 @@
 
 A simple crate with utilities such as setting the window icon and taskbar progress indicator.
 Works perfectly without issues on linux and windows. (macOS?)
-Has only needed bevy dependencies. Supports embedded assets. (bevy-embedded-assets)
+Has only needed bevy/winit dependencies, depends only on winsafe crate (exposes winsafe/winit functions). 
+Supports embedded assets and other plugins.
 
-Compatible with Bevy 0.15.3 (as of 0.15.4)
+Compatible with Bevy 0.16.0-rc.05 (as of 0.16.0-rc.05)
 
-Modyfing taskbar progress indicator is only supported on windows and requires the `taskbar` feature.
+Modyfing taskbar progress indicator is only supported on windows 7+ and requires the `taskbar` feature.
 
 Example usage:
 ```rs
