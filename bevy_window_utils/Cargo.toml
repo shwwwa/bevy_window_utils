@@ -1,6 +1,6 @@
 [package]
 name = "bevy_window_utils"
-version = "0.16.0-rc.5"
+version = "0.16.0"
 edition = "2024"
 authors = ["shwwwa", "Adam Grabski"]
 description = "A library for window utils such as managing window icon and taskbar progress indicator in Bevy."
@@ -16,7 +16,7 @@ taskbar = ["dep:winsafe"]
 default = ["taskbar"]
 
 [dependencies]
-bevy = { version = "0.16.0-rc.5", default-features = false, features = ["bevy_log","bevy_asset", "bevy_sprite", "bevy_window", "bevy_winit", "png"] } 
+bevy = { version = "0.16.0", default-features = false, features = ["bevy_log","bevy_asset", "bevy_sprite", "bevy_window", "bevy_winit", "png"] } 
 # todo(winit): fix default-features=false as of bevy 0.16.0
 winit = { version = "0.30", features = ["rwh_06"]}
 

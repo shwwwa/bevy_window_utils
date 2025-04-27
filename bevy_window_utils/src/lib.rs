@@ -137,6 +137,7 @@ pub struct WindowUtils {
     pub is_maximized: Option<bool>,
 }
 
+/** Checks every frame if window is maximized. */
 fn update_is_maximized(
     mut window_utils: ResMut<WindowUtils>,
     windows: NonSend<WinitWindows>,
@@ -155,6 +156,7 @@ fn update_is_maximized(
     }
 }
 
+/** Checks every frame if window utils resource was updated. */
 fn window_utils_resource_updated(
     window_utils: Res<WindowUtils>,
     windows: NonSend<WinitWindows>,
