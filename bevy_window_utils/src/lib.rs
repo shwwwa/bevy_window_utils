@@ -1,4 +1,7 @@
 #![allow(clippy::pedantic)]
+#![warn(missing_docs)]
+
+//! A crate that defines an interface for extended windowing support in Bevy.
 
 #[allow(unused_imports)]
 use std::os::raw::c_void;
@@ -20,7 +23,7 @@ use w::{HWND, ITaskbarList4};
 use winsafe::{self as w, co};
 
 /** A [`Plugin`] that defines an interface for extended windowing support in Bevy.
-You can initialize window icon here.
+You can initialize window icon here, or just use default function.
 Adds barely exposed things to bevy like setting window icons, taskbar progress, or other winit/winsafe options. */
 #[derive(Default)]
 pub struct WindowUtilsPlugin {
@@ -41,7 +44,7 @@ impl Plugin for WindowUtilsPlugin {
 
 /** Struct for taskbar progress. Requires `taskbar` feature.
   Provides useful interface from COM:
-  https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
+  <https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3>
 
   Supports:
   - Windows (7+)
@@ -53,9 +56,9 @@ pub struct TaskbarProgress {
     /** Indicates the value progress will have when the operation is complete. */
     pub max: u64,
     /// Indicates the type and state of the progress indicator displayed on a taskbar button.
-    /// Note that a call to SetProgressValue should switch a progress indicator
-    /// currently in an indeterminate mode (TBPF_INDETERMINATE) to a normal (determinate) display
-    /// and clear the TBPF_INDETERMINATE flag, but then is overwritten with state change, so it needs manual change.
+    /// Note that a call to `SetProgressValue` should switch a progress indicator
+    /// currently in an indeterminate mode ([`TaskbarState::Indeterminate`]) to a normal ([`TaskbarState::Normal`]) display
+    /// and clear the [`TaskbarState::Indeterminate`] flag, but then is overwritten with state change, so it needs manual change.
     pub state: TaskbarState,
     /// Automatically stops the progress when [`TaskbarProgress::progress`] exceeds [`TaskbarProgress::max`].
     pub auto_no_progress: bool,
@@ -73,9 +76,9 @@ impl Default for TaskbarProgress {
 }
 
 /// Sets the type and state of the progress indicator displayed on a taskbar button.
-/// Note that a call to SetProgressValue should switch a progress indicator
-/// currently in an indeterminate mode (TBPF_INDETERMINATE) to a normal (determinate) display
-/// and clear the TBPF_INDETERMINATE flag, but is overwritten with state change, so it needs manual change.
+/// Note that a call to `SetProgressValue` should switch a progress indicator
+/// currently in an indeterminate mode ([`TaskbarState::Indeterminate`]) to a normal ([`TaskbarState::Normal`]) display
+/// and clear the ([`TaskbarState::Indeterminate`]) flag, but is overwritten with state change, so it needs manual change.
 #[derive(Copy, Clone)]
 pub enum TaskbarState {
     /// Stops displaying progress and returns the button to its normal state.
@@ -112,28 +115,27 @@ pub enum TaskbarState {
 #[derive(Resource, Default)]
 pub struct WindowUtils {
     #[cfg(feature = "taskbar")]
-    /** Current taskbar progress. Supports only windows 7+. Requires `taskbar` feature.
-    Provides useful interface from COM:
-    https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3
-
-    Supports:
-    - Windows (7+)
-    */
+    /// Current taskbar progress. Supports only windows 7+. Requires `taskbar` feature.
+    ///
+    /// Provides useful interface from COM:
+    /// <https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-itaskbarlist3>
+    ///
+    /// Supports:
+    /// - Windows (7+)
     pub taskbar_progress: Option<TaskbarProgress>,
-    /** Contains handle to window's icon. If resource is invalid throws `bevy_asset::server` error to console.
-    Supports:
-    - Windows
-    - Linux
-    - MacOS (?)
-     */
+    /// Contains handle to window's icon. If resource is invalid throws `bevy_asset::server` error to console.
+    ///
+    /// Supports:
+    /// - Windows
+    /// - Linux
+    /// - MacOS (?)
     pub window_icon: Option<bevy::asset::Handle<Image>>,
-    /** Automatically changes its value whether window is maximized or not. Returns None if error happened.
-    Requires existence of primary window.
-    Supports:
-    - Windows
-    - Linux
-    - MacOS (?)
-     */
+    /// Automatically changes its value whether window is maximized or not. Returns [`None`] if error happened.
+    /// Requires existence of primary window.
+    /// Supports:
+    /// - Windows
+    /// - Linux
+    /// - MacOS (?)
     pub is_maximized: Option<bool>,
 }
 
@@ -181,7 +183,7 @@ fn window_utils_resource_updated(
             window.1.set_window_icon(icon.clone())
         }
 
-        // Taskbar: supports only windows
+        // feat(taskbar): supports only windows
         #[cfg(all(feature = "taskbar", target_os = "windows"))]
         if window_utils.is_changed() {
             {
@@ -193,8 +195,8 @@ fn window_utils_resource_updated(
                             co::CLSCTX::INPROC_SERVER,
                         )
                         .unwrap();
-                        // unsafe: winit holds HWND as an NonZeroIsize while winsafe uses a pointer.
-                        // requires rwh_06 feature (gets raw_window_handle v0.6) from winit that is provided by default.
+                        // unsafe: winit holds HWND as an `NonZeroIsize` while winsafe uses a pointer.
+                        // requires `rwh_06` feature (gets `raw_window_handle v0.6`) from `winit` that is provided by default.
                         unsafe {
                             match window.1.window_handle() {
                                 Ok(handle) => {
