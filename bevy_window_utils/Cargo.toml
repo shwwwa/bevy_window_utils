@@ -16,9 +16,16 @@ taskbar = ["dep:winsafe"]
 default = ["taskbar"]
 
 [dependencies]
-bevy = { version = "0.16.0", default-features = false, features = ["bevy_log","bevy_asset", "bevy_sprite", "bevy_window", "bevy_winit", "png"] } 
-# todo(winit): fix default-features=false as of bevy 0.16.0
-winit = { version = "0.30", features = ["rwh_06"]}
+bevy_app = { version = "0.16.0", default-features = false }
+bevy_asset = { version = "0.16.0", default-features = false }
+bevy_ecs = { version = "0.16.0", default-features = false }
+bevy_log = { version = "0.16.0", default-features = false }
+bevy_image = { version = "0.16.0", default-features = false }
+bevy_platform = { version = "0.16.0", default-features = false }
+bevy_window = { version = "0.16.0", default-features = false }
+bevy_winit = { version = "0.16.0", default-features = false }
+# You can enable wayland, and other features by yourself.
+winit = { version = "0.30", default-features = false, features = ["x11", "rwh_06"]}
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winsafe = { version = "0.0.23", optional = true, features = ["shell"] }

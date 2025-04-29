@@ -6,10 +6,13 @@
 #[allow(unused_imports)]
 use std::os::raw::c_void;
 
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-use bevy::winit::WinitWindows;
-use bevy::{app::Plugin, prelude::Resource};
+use bevy_ecs::{prelude::*, resource::Resource};
+use bevy_app::{App, Plugin, Update};
+use bevy_asset::Assets;
+use bevy_image::Image;
+use bevy_log::{warn, warn_once};
+use bevy_window::PrimaryWindow;
+use bevy_winit::WinitWindows;
 #[cfg(target_os = "windows")]
 use winit::raw_window_handle;
 #[cfg(target_os = "windows")]
@@ -28,7 +31,7 @@ Adds barely exposed things to bevy like setting window icons, taskbar progress, 
 #[derive(Default)]
 pub struct WindowUtilsPlugin {
     /** What window icon to set on initialization. */
-    pub icon: Option<bevy::asset::Handle<Image>>,
+    pub icon: Option<bevy_asset::Handle<Image>>,
 }
 
 impl Plugin for WindowUtilsPlugin {
@@ -129,7 +132,7 @@ pub struct WindowUtils {
     /// - Windows
     /// - Linux
     /// - MacOS (?)
-    pub window_icon: Option<bevy::asset::Handle<Image>>,
+    pub window_icon: Option<bevy_asset::Handle<Image>>,
     /// Automatically changes its value whether window is maximized or not. Returns [`None`] if error happened.
     /// Requires existence of primary window.
     /// Supports:
