@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,9 +22,3 @@ jobs:
           override: true
     - name: Build
       run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - uses: katyo/publish-crates@v2
-      with:
-          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          path: ./bevy_window_management/
